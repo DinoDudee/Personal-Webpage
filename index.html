@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My First 3D Browser Game (Babylon.js)</title>
     <style>
-        /* Remove margins and hide scrollbars so the canvas fills the screen */
         html, body {
             overflow: hidden;
             width: 100%;
@@ -15,11 +14,10 @@
             background-color: #111;
             font-family: sans-serif;
         }
-        /* Babylon.js requires the canvas element to be explicitly sized */
         #renderCanvas {
             width: 100%;
             height: 100%;
-            touch-action: none; /* Prevents mobile scrolling interference */
+            touch-action: none;
         }
         #instructions {
             position: absolute;
@@ -32,18 +30,18 @@
             pointer-events: none;
         }
         #crosshair {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 6px;  
-          height: 6px;        
-          background-color: white; 
-          border-radius: 50%;    
-          transform: translate(-50%, -50%); 
-          pointer-events: none;  
-          box-shadow: 0 0 2px black;   /* Optional: Gives it a subtle dark border so you can see it against white surfaces */
-          opacity: 0.8;                /* Optional: Makes it slightly translucent */
-}
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;  
+            height: 6px;        
+            background-color: white; 
+            border-radius: 50%;    
+            transform: translate(-50%, -50%); 
+            pointer-events: none;  
+            box-shadow: 0 0 2px black;
+            opacity: 0.8;
+        }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
 </head>
@@ -59,85 +57,44 @@
     <canvas id="renderCanvas"></canvas>
 
     <script>
-        // -------------------------------------------------------------
-        // 1. SETUP THE ENGINE AND CANVAS
-        // -------------------------------------------------------------
         const canvas = document.getElementById("renderCanvas");
-        // Create the rendering engine (true enables anti-aliasing)
         const engine = new BABYLON.Engine(canvas, true);
 
-        // This function creates our entire 3D world
         const createScene = function () {
-            // Create a basic Babylon Scene object
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.13, 0.13, 0.13); // Dark gray background
+            scene.clearColor = new BABYLON.Color3(0.13, 0.13, 0.13);
 
-            // -------------------------------------------------------------
-            // 2. CREATE THE CAMERA & LIGHTS
-            // -------------------------------------------------------------
-            // Target/Follow Camera parameters: Name, Alpha (rotation around Y), Beta (rotation around X), Radius (distance), Target Position, Scene
             const camera = new BABYLON.UniversalCamera("gameCamera", new BABYLON.Vector3(0, 0.8, 0), scene);
-
             camera.minZ = 0.01;
-
-            // Attach mouse control to the camera
             camera.attachControl(canvas, true);
-
-            // 1. Lower the inertia (Default is 0.9).
             camera.inertia = 0.1;
-
-            // 2. Adjust mouse sensitivity (Default is 2000).
             camera.angularSensibility = 500;
 
-            // Unbind default camera keys so WASD is reserved for the player box
             camera.keysUp = [];
             camera.keysDown = [];
             camera.keysLeft = [];
             camera.keysRight = [];
             
-            // Create a basic light, aiming upwards towards the sky
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 1;
 
-            // -------------------------------------------------------------
-            // 3. CREATE THE ENVIRONMENT (BASEPLATE)
-            // -------------------------------------------------------------
-            // Create a wide, flat ground plane
             const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 40, height: 40}, scene); 
-            // Give it a dark material
             const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
-          // 1. Add your image URL here (can be a local file path or a web link)
             groundMaterial.diffuseTexture = new BABYLON.Texture("https://media.istockphoto.com/id/512623063/photo/64-square-marble-chess-board.jpg?s=612x612&w=0&k=20&c=i6pcUFqVoKDnh6xizu7hMy6kjy4_-4XY2iRZrOBcDrI=", scene);
-// 2. Optional: Tile the image so it doesn't look stretched out across the giant 40x40 floor
-groundMaterial.diffuseTexture.uScale = 10; // Repeats 10 times horizontally
-groundMaterial.diffuseTexture.vScale = 10; // Repeats 10 times vertically
+            groundMaterial.diffuseTexture.uScale = 10;
+            groundMaterial.diffuseTexture.vScale = 10;
           
-//This is the glue. It explicitly tells the engine: "Take this skin and wrap it around this skeleton."
-ground.material = groundMaterial;
-         
-            // Babylon.js has built-in grid options, but a simple material wireframe shows a grid style instantly:
-            groundMaterial.wireframe = false; 
             ground.material = groundMaterial;
 
-            // Optional: Draw a grid directly using Babylon's procedural grid features or standard lines
-            // For simplicity here, we stick to a clean solid ground.
-
-            // -------------------------------------------------------------
-            // 4. CREATE THE PLAYER CHARACTER
-            // -------------------------------------------------------------
             const player = BABYLON.MeshBuilder.CreateBox("player", {size: 1}, scene);
-            player.position.y = 0.5; // Sit on top of the ground
+            player.position.y = 0.5;
 
             const playerMaterial = new BABYLON.StandardMaterial("playerMat", scene);
-            playerMaterial.diffuseColor = new BABYLON.Color3(0, 0.5, 1); // Light blue box
+            playerMaterial.diffuseColor = new BABYLON.Color3(0, 0.5, 1);
             player.material = playerMaterial;
 
-            // -------------------------------------------------------------
-            // 5. INPUT HANDLING (KEYBOARD LISTENERS)
-            // -------------------------------------------------------------
             const inputMap = {};
             
-            // Babylon.js provides a built-in Action Manager to elegantly watch keyboard events
             scene.actionManager = new BABYLON.ActionManager(scene);
             
             scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
@@ -148,74 +105,56 @@ ground.material = groundMaterial;
                 inputMap[evt.sourceEvent.key.toLowerCase()] = false;
             }));
 
-          // --- POINTER LOCK (MOUSE LOCK) LOGIC ---
             canvas.addEventListener("click", () => {
-    canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-            if (canvas.requestPointerLock) {
-              canvas.requestPointerLock();
-              }
+                canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+                if (canvas.requestPointerLock) {
+                    canvas.requestPointerLock();
+                }
             });
 
-            // -------------------------------------------------------------
-            // 6. THE FRAME-BY-FRAME LOGIC
-            // -------------------------------------------------------------
             const playerSpeed = 0.15;
-            const gravity = -0.01;      // How fast the player falls back down
-            const jumpForce = 0.22;     // How high/fast the player launches upward
-            let verticalVelocity = 0;   // The current vertical speed (0 when on the ground)
-            let isGrounded = true;      // Tracks if the player is standing on the floor
+            const gravity = -0.01;      
+            const jumpForce = 0.22;     
+            let verticalVelocity = 0;   
+            let isGrounded = true;      
 
-            // This code runs right before Babylon draws each frame onto the screen
             scene.onBeforeRenderObservable.add(() => {
-                // Update player position based on input map
-                // 1. Get current forward and right vectors relative to camera look angle
-const forward = camera.getDirection(BABYLON.Vector3.Forward());
-const right = camera.getDirection(BABYLON.Vector3.Right());
+                const forward = camera.getDirection(BABYLON.Vector3.Forward());
+                const right = camera.getDirection(BABYLON.Vector3.Right());
 
-              // 2. Flatten them on Y so looking up/down doesn't make the player fly or sink
-forward.y = 0;
-right.y = 0;
-forward.normalize();
-right.normalize();
+                forward.y = 0;
+                right.y = 0;
+                forward.normalize();
+                right.normalize();
 
-              // 3. Accumulate direction from inputs
-let moveDirection = new BABYLON.Vector3(0, 0, 0);
-if (inputMap["w"]) moveDirection.addInPlace(forward);
-if (inputMap["s"]) moveDirection.subtractInPlace(forward);
-if (inputMap["a"]) moveDirection.subtractInPlace(right);
-if (inputMap["d"]) moveDirection.addInPlace(right);
+                let moveDirection = new BABYLON.Vector3(0, 0, 0);
+                if (inputMap["w"]) moveDirection.addInPlace(forward);
+                if (inputMap["s"]) moveDirection.subtractInPlace(forward);
+                if (inputMap["a"]) moveDirection.subtractInPlace(right);
+                if (inputMap["d"]) moveDirection.addInPlace(right);
 
-// 4. Prevent diagonal speed boost and apply movement
-if (moveDirection.length() > 0) {
-    moveDirection.normalize();  player.position.addInPlace(moveDirection.scale(playerSpeed));
-}
+                if (moveDirection.length() > 0) {
+                    moveDirection.normalize();  
+                    player.position.addInPlace(moveDirection.scale(playerSpeed));
+                }
 
-                // --- JUMPING & GRAVITY LOGIC ---
-                // 1. Trigger the jump
                 if (inputMap[" "] && isGrounded) {
-                    verticalVelocity = jumpForce; // Give an upward push
-                    isGrounded = false;           // Player is now in the air
+                    verticalVelocity = jumpForce; 
+                    isGrounded = false;           
                 }
-                // 2. Apply gravity if the player is in the air
                 if (!isGrounded) {
-                    verticalVelocity += gravity;  // Pull the player down gradually
-                    player.position.y += verticalVelocity; // Move the player box vertically
+                    verticalVelocity += gravity;  
+                    player.position.y += verticalVelocity; 
                 }
-                // 3. Ground Collision Check
-                // The top of our baseplate is at Y = 0, and the player cube center starts at Y = 0.5
                 if (player.position.y <= 0.5) {
-                    player.position.y = 0.5;      // Lock them exactly to the ground
-                    verticalVelocity = 0;         // Stop falling
-                    isGrounded = true;            // They are safe to jump again!
+                    player.position.y = 0.5;      
+                    verticalVelocity = 0;         
+                    isGrounded = true;            
                 }
               
-                // This keeps player.position.x strictly between -19.5 and 19.5
                 player.position.x = Math.max(-19.5, Math.min(19.5, player.position.x));
-
-                // This keeps player.position.z strictly between -19.5 and 19.5
                 player.position.z = Math.max(-19.5, Math.min(19.5, player.position.z));
 
-                // Keep the camera offset dynamically locked to the player position
                 camera.position.x = player.position.x;
                 camera.position.y = player.position.y + 0.3;
                 camera.position.z = player.position.z; 
@@ -225,18 +164,12 @@ if (moveDirection.length() > 0) {
             return scene;
         };
 
-        // Initialize our scene setup
         const scene = createScene();
 
-        // -------------------------------------------------------------
-        // 7. THE GAME LOOP
-        // -------------------------------------------------------------
-        // Register a render loop to repeatedly render the scene
         engine.runRenderLoop(function () {
             scene.render();
         });
 
-        // Watch for browser resizing events
         window.addEventListener("resize", function () {
             engine.resize();
         });
