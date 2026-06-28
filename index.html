@@ -44,6 +44,7 @@
         }
     </style>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 </head>
 <body>
 
@@ -78,13 +79,11 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 1;
 
-            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 40, height: 40}, scene); 
-            const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
-            groundMaterial.diffuseTexture = new BABYLON.Texture("https://media.istockphoto.com/id/512623063/photo/64-square-marble-chess-board.jpg?s=612x612&w=0&k=20&c=i6pcUFqVoKDnh6xizu7hMy6kjy4_-4XY2iRZrOBcDrI=", scene);
-            groundMaterial.diffuseTexture.uScale = 10;
-            groundMaterial.diffuseTexture.vScale = 10;
-          
-            ground.material = groundMaterial;
+            BABYLON.SceneLoader.ImportMeshAsync("", "./", "environment.glb", scene).then((result) => {
+            const environmentRoot = result.meshes[0];
+            environmentRoot.position = new BABYLON.Vector3(0, 0, 0);
+            environmentRoot.rotation = new BABYLON.Vector3(0, 0, 0);
+            environmentRoot.scaling = new BABYLON.Vector3(100, 100, 100);
 
             const player = BABYLON.MeshBuilder.CreateBox("player", {size: 1}, scene);
             player.position.y = 0.5;
